@@ -1,0 +1,8 @@
+{
+    "code-runner.saveFileBeforeRun": true,
+    
+    "github.copilot.enable": {
+        "*": false
+    
+}
+}
