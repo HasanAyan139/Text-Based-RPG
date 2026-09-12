@@ -24,8 +24,30 @@ class Goblin:
         self.health = 30
         self.attack = 8
         self.defense = 2
+        self.xp = 10
     def take_damage(self, damage):
         self.health -= damage
+
+class Skeleton:
+    def __init__(self):
+        self.name = "Skeleton"
+        self.health = 20
+        self.attack = 15
+        self.defense = 1
+        self.xp = 15
+    def take_damage(self, damage):
+        self.health -= damage
+
+class Zombie:
+    def __init__(self):
+        self.name = "Zombie"
+        self.health = 50
+        self.attack = 12
+        self.defense = 5
+        self.xp = 25
+    def take_damage(self, damage):
+        self.health -= damage
+    
 
 class Player:
     def __init__(self, name):
@@ -52,21 +74,47 @@ class Player:
             self.defense += 1
             self.max_health += 20
 
+class Shop:
+    def __init__(self,name):
+        self.name = name
+        self.inventory = []
+    def fill_Smith_inventory(self):
+        for i in range (10):
+            Smithchance = random.randint(0 , 1)
+            if Smithchance == 0:
+                self.inventory.append(Wooden_Sword)
+            if Smithchance == 1:
+                self.inventory.append(Regular_Armor)
+    def fill_Alchemist_inventory(self):
+        for i in range (10):
+            self.inventory.append(Health_Potion)
+    def clear_inventory(self):
+        self.inventory.clear()
+
+Smith = Shop("Smith")
+Alchemist = Shop("Alchemist")
+current_shop = None
+
+
 
 class Potion:
     def __init__(self):
         self.name = "Potion"
         self.heal_amount = 20
         self.item_type = "consumable"
+        self.cost = 10
+        self.sellcost = 5
     def use(self, player):
         player.health += self.heal_amount
         if player.health > player.max_health:
             player.health = player.max_health
 
 class Sword:
-    def __init__(self,name,AD):
+    def __init__(self,name,AD,cost,sellcost):
         self.name = name
         self.AD = AD
+        self.cost = cost
+        self.sellcost = sellcost
         self.item_type = "equipment"
     def equip(self, player):
         if player.weapon is not None:
@@ -79,10 +127,12 @@ class Sword:
 
 
 class Armor:
-    def __init__(self, name, hp, armor):
+    def __init__(self, name, hp, armor, cost, sellcost):
         self.name = name
         self.health = hp
         self.armor = armor
+        self.cost = cost
+        self.sellcost = sellcost
         self.item_type = "equipment"
     def equip(self, player):
         if player.armor is not None:
@@ -95,8 +145,10 @@ class Armor:
         player.max_health += self.health
 
 Health_Potion = Potion()
-Wooden_Sword = Sword("Wooden Sword", 10)
-Regular_Armor = Armor("Regular Armor", 25, 7)
+Wooden_Sword = Sword("Wooden Sword", 10, 15, 10)
+Regular_Armor = Armor("Regular Armor", 25, 7, 20, 15)
+Smith.fill_Smith_inventory()
+Alchemist.fill_Alchemist_inventory()
 
 def show_player_stats(player):
     terminal_width = get_terminal_size().columns
@@ -141,6 +193,7 @@ while running:
             print("2. Go to the cave")
             print("3. Go home")
             print("4. Quit")
+            print("5. Go to the market")
             choice = input("What do you want to do? ")
             if choice == "1":
                 print("You go to the forest.")
@@ -154,6 +207,8 @@ while running:
             elif choice == "4":
                 print("You quit the game.")
                 running = False
+            elif choice == "5":
+                location = "market"
             else:
                 print("Invalid choice.")
         elif location == "forest":
@@ -188,11 +243,22 @@ while running:
             else:
                 print("Invalid choice.")
         elif location == "cave":
+            enemy_chance = random.randint(1, 100)
             başlık("Cave")
+            show_message()
+            if enemy_chance <= 30:
+                game_state = "Encounter"
+                sorz = random.randint(0, 1)
+                if sorz == 0:
+                    current_enemy = Skeleton()
+                if sorz == 1:
+                    current_enemy = Zombie()
+                continue
             print("You are in the cave.")
             print("1. Go to the village")
             print("2. Go to the forest")
-            print("3. Quit")
+            print("3. Fight an enemy")
+            print("4. Quit")
             choice = input("What do you want to do? ")
             if choice == "1":
                 print("You go to the village.")
@@ -201,6 +267,14 @@ while running:
                 print("You go to the forest.")
                 location = "forest"
             elif choice == "3":
+                game_state = "Encounter"
+                sorz = random.randint(0, 1)
+                if sorz == 0:
+                    current_enemy = Skeleton()
+                if sorz == 1:
+                    current_enemy = Zombie()
+                continue
+            elif choice == "4":
                 print("You quit the game.")
                 running = False
             else:
@@ -227,6 +301,25 @@ while running:
             elif choice == "4":
                 print("You quit the game.")
                 running = False
+        elif location == "market":
+            başlık("Market")
+            show_message()
+            print("You are at the market")
+            print("1. Return to the village")
+            print("2. Go to Smith")
+            print("3. Go to Alchemist")
+            choice = input("What do you want to do? ")
+            if choice == "1":
+                print("You return to the village.")
+                location = "village"
+            if choice == "2":
+                current_shop = Smith
+                game_state = "Shop"
+                continue
+            if choice == "3":
+                current_shop = Alchemist
+                game_state = "Shop"
+                continue
     if game_state == "Encounter":
         başlık("Encounter")
         print(f"A wild {current_enemy.name} appears!")
@@ -265,7 +358,7 @@ while running:
                 lootchance = random.randint(0,2)
                 message = f"You have defeated the {current_enemy.name}!\n"
                 message += "You gained 25 Gold!\n"
-                message += "You gained 10 XP!\n"
+                message += f"You gained {current_enemy.xp} XP!\n"
 
                 if lootchance == 0:
                     player.inventory.append(Health_Potion)
@@ -278,7 +371,7 @@ while running:
                     message += "You found a Regular Armor!"
 
                 player.gold += 25
-                player.gainxp(10)
+                player.gainxp(current_enemy.xp)
 
                 game_state = "normal"
                 current_enemy = None
@@ -329,5 +422,59 @@ while running:
                 player.inventory.remove(item)
                 message =f"You equipped {item.name}"
             continue
+    if game_state == "Shop":
+        başlık(current_shop.name)
+        show_message()
+        column_width = 35
+
+        print(f"{'YOUR INVENTORY':<{column_width}}{'SHOP INVENTORY'}")
+        print()
+
+        max_rows = max(len(player.inventory), len(current_shop.inventory))
+
+        for i in range(max_rows):
+            left = ""
+            right = ""
+
+            if i < len(player.inventory):
+                left = f"{i + 1}. {player.inventory[i].name}"
+
+            if i < len(current_shop.inventory):
+                right = f"{i + 1}. {current_shop.inventory[i].name:<{15}}  {current_shop.inventory[i].cost} Gold"
+
+            print(f"{left:<{column_width}}{right}")
+
+        print()
+        print("0. Go back")
+        print("1. Buy")
+        print("2. Sell")
+        choice = input("What do you want to do?")
+        if choice == "0":
+            message = "You go back to the market"
+            location = "market"
+            game_state = "normal"
+            continue
+        if choice == "1":
+            number = input("Which item do you want to buy?")
+            item = current_shop.inventory[int(number) - 1]
+            if player.gold >= item.cost:
+                player.gold -= item.cost
+                player.inventory.append(item)
+                current_shop.inventory.remove(item)
+            else:
+                message = "You don't have enough gold"
+                continue
+        if choice =="2":
+            number = input("Which item do you want to sell?")
+            item = player.inventory[int(number) - 1]
+            player.gold += item.sellcost
+            player.inventory.remove(item)
+            current_shop.inventory.append(item)
+            message = f"You sold {item.name}"
+            continue
+
+                
+
+
 
 
